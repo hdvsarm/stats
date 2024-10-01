@@ -10,58 +10,60 @@ with open('numgames.txt') as f:
     numgames = f.read()
 numgames = ast.literal_eval(numgames)
 
-# season=pd.DataFrame(columns=["date","home-team","vis-team","win-team","lose-team"])
+# KEY: NatStat key
 
-# for i in range(1985,2024):
-#     start_date=str(i)+"-04-01"
-#     start_date=datetime.strptime(start_date,"%Y-%m-%d")
-#     season_end=start_date+pd.DateOffset(days=365)
-#     day1=start_date
-#     day1=day1.date()
-#     day2=day1+pd.DateOffset(days=10)
-#     day2=day2.date()
-#     while day2 <= season_end:
-#             temp=pd.DataFrame(columns=["season","date","home-team","vis-team","win-team","lose-team"])
-#             url = "https://api3.natst.at/0bf2-ff3a83/games/PFB/"+str(day1)+","+str(day2)
-#             data=requests.get(url).json()
-#             try:
-#                 for j in data["games"]:
-#                         seasonyear=i
-#                         try:
-#                             gamedate=data["games"][j]["gameday"]
-#                         except:
-#                             gamedate="null"
+season=pd.DataFrame(columns=["date","home-team","vis-team","win-team","lose-team"])
 
-#                         try:
-#                             hometeam=data["games"][j]["home-code"]
-#                         except:
-#                             hometeam="null"
+for i in range(1985,2024):
+    start_date=str(i)+"-04-01"
+    start_date=datetime.strptime(start_date,"%Y-%m-%d")
+    season_end=start_date+pd.DateOffset(days=365)
+    day1=start_date
+    day1=day1.date()
+    day2=day1+pd.DateOffset(days=10)
+    day2=day2.date()
+    while day2 <= season_end:
+            temp=pd.DataFrame(columns=["season","date","home-team","vis-team","win-team","lose-team"])
+            url = "https://api3.natst.at/" + KEY + "/games/PFB/"+str(day1)+","+str(day2)
+            data=requests.get(url).json()
+            try:
+                for j in data["games"]:
+                        seasonyear=i
+                        try:
+                            gamedate=data["games"][j]["gameday"]
+                        except:
+                            gamedate="null"
+
+                        try:
+                            hometeam=data["games"][j]["home-code"]
+                        except:
+                            hometeam="null"
                         
-#                         try:
-#                             visteam=data["games"][j]["visitor-code"]
-#                         except:
-#                             visteam="null"
+                        try:
+                            visteam=data["games"][j]["visitor-code"]
+                        except:
+                            visteam="null"
 
-#                         try:
-#                             winteam=data["games"][j]["winner-code"]
-#                         except:
-#                              winteam="null"
+                        try:
+                            winteam=data["games"][j]["winner-code"]
+                        except:
+                             winteam="null"
                         
-#                         try:
-#                             loseteam=data["games"][j]["loser-code"]
-#                         except:
-#                             loseteam="null"
+                        try:
+                            loseteam=data["games"][j]["loser-code"]
+                        except:
+                            loseteam="null"
                         
-#                         temp.loc[len(temp)] = [seasonyear,gamedate,hometeam,visteam,winteam,loseteam]
-#             except:
-#                 next
-#             season=season.append(temp)
-#             day1=day2+timedelta(days=1)
-#             day2=day1+timedelta(days=30)
+                        temp.loc[len(temp)] = [seasonyear,gamedate,hometeam,visteam,winteam,loseteam]
+            except:
+                next
+            season=season.append(temp)
+            day1=day2+timedelta(days=1)
+            day2=day1+timedelta(days=30)
 
-# season['date']=pd.to_datetime(season['date'],format="%Y-%m-%d")
-# season.sort_values(by="date",ascending=True,inplace=True)
-# season.to_csv("results.csv")
+season['date']=pd.to_datetime(season['date'],format="%Y-%m-%d")
+season.sort_values(by="date",ascending=True,inplace=True)
+season.to_csv("results.csv")
 
 season=pd.read_csv("results.csv")
 
