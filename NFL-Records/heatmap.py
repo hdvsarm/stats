@@ -11,14 +11,7 @@ records = pd.read_csv("records_data.csv")
 
 i=0
 while i < len(records):
-    print(i)
-    print(len(records))
-    print("---w---")
-    print(records.loc[i,"w"])
-    print("---l---")
-    print(records.loc[i,"l"])
     if records.loc[i,"w"]+records.loc[i,"l"]+records.loc[i,"t"]>17:
-        print("here")
         records.drop(i,inplace=True)
         i+=1
     else:
