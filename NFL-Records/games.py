@@ -14,7 +14,7 @@ numgames = ast.literal_eval(numgames)
 
 season=pd.DataFrame(columns=["date","home-team","vis-team","win-team","lose-team"])
 
-for i in range(1985,2024):
+for i in range(1966,2024):
     start_date=str(i)+"-04-01"
     start_date=datetime.strptime(start_date,"%Y-%m-%d")
     season_end=start_date+pd.DateOffset(days=365)
