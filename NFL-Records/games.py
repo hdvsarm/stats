@@ -10,8 +10,6 @@ with open('numgames.txt') as f:
     numgames = f.read()
 numgames = ast.literal_eval(numgames)
 
-# KEY: NatStat key
-
 season=pd.DataFrame(columns=["date","home-team","vis-team","win-team","lose-team"])
 
 for i in range(1966,2024):
@@ -20,12 +18,12 @@ for i in range(1966,2024):
     season_end=start_date+pd.DateOffset(days=365)
     day1=start_date
     day1=day1.date()
-    day2=day1+pd.DateOffset(days=10)
+    day2=day1+pd.DateOffset(days=30)
     day2=day2.date()
     while day2 <= season_end:
             temp=pd.DataFrame(columns=["season","date","home-team","vis-team","win-team","lose-team"])
-            url = "https://api3.natst.at/" + KEY + "/games/PFB/"+str(day1)+","+str(day2)
-            data=requests.get(url).json()
+            url = "https://api3.natst.at/0bf2-ff3a83/games/PFB/"+str(day1)+","+str(day2)
+            data = requests.get(url).json()
             try:
                 for j in data["games"]:
                         seasonyear=i
@@ -56,20 +54,25 @@ for i in range(1966,2024):
                         
                         temp.loc[len(temp)] = [seasonyear,gamedate,hometeam,visteam,winteam,loseteam]
             except:
-                next
+                if day1 >= date(i, 8, 1):
+                    with open('output'+'_'+str(day1)+'_'+str(day2)+'.txt', 'w') as file:
+                        json.dump(data, file, indent=4)
+
+                else:
+                    next
             season=season.append(temp)
             day1=day2+timedelta(days=1)
             day2=day1+timedelta(days=30)
 
 season['date']=pd.to_datetime(season['date'],format="%Y-%m-%d")
 season.sort_values(by="date",ascending=True,inplace=True)
-season.to_csv("results.csv")
+season.to_csv("results2.csv")
 
 season=pd.read_csv("results.csv")
 
 team_perf=pd.DataFrame(columns=["year","team","w","l","playoffs"])
 
-for year in range(1985,2024):
+for year in range(1966,2024):
      for team in teams:
         team_w=0
         team_l=0
