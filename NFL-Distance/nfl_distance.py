@@ -52,7 +52,7 @@ for i in range(1996,2024):
     intl_flag=0
     while day2 <= season_end:
             temp=pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long","win-team","lose-team"])
-            url = "https://api3.natst.at/0bf2-ff3a83/games/PFB/"+str(day1)+","+str(day2)
+            url = "https://api3.natst.at/"+"KEY HERE"+"/games/PFB/"+str(day1)+","+str(day2)
             data = requests.get(url).json()
             try:
                 for j in data["games"]:
