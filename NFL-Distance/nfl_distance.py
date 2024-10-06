@@ -4,6 +4,7 @@ import ast
 import pandas as pd
 from geopy.distance import distance
 from datetime import date, datetime, timedelta, time
+from record_processor import records_processor
 
 teams=['ARZ', 'ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DAL', 'DEN', 'DET', 'GBP', 'HOU', 'IND', 'JAX', 'KCC', 'LAC', 'LAR', 'LVR', 'MIA', 'MIN', 'NYG', 'NYJ', 'NEP', 'NOS', 'PHL', 'PIT', 'SFF', 'SEA', 'TBB', 'TEN', 'WSH']
 
@@ -38,10 +39,10 @@ locations = pd.read_csv("team_cities.csv")
 intl_locations=["Wembley Stadium", "Twickenham Stadium", "Tottenham Stadium", "Azteca Stadium", "Allianz Arena"]
 # frankfurt locations not listed in data, need exception for 2023-11-05 MIAvKCC and 2023-11-12 INDvNEP
 
-season = pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long"])
+season = pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long","win-team","lose-team"])
 
-for i in range(2007,2009):
-    start_date=str(i)+"-09-01"
+for i in range(1996,2024):
+    start_date=str(i)+"-04-01"
     start_date=datetime.strptime(start_date,"%Y-%m-%d")
     season_end=start_date+pd.DateOffset(days=365)
     day1=start_date
@@ -50,7 +51,7 @@ for i in range(2007,2009):
     day2=day2.date()
     intl_flag=0
     while day2 <= season_end:
-            temp=pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long"])
+            temp=pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long","win-team","lose-team"])
             url = "https://api3.natst.at/0bf2-ff3a83/games/PFB/"+str(day1)+","+str(day2)
             data = requests.get(url).json()
             try:
@@ -60,28 +61,33 @@ for i in range(2007,2009):
                             gamedate=data["games"][j]["gameday"]
                         except:
                             gamedate="null"
-
+                        try:
+                            winteam=data["games"][j]["winner-code"]
+                        except:
+                             winteam="null"
+                        try:
+                            loseteam=data["games"][j]["loser-code"]
+                        except:
+                            loseteam="null"
                         try:
                             hometeam=data["games"][j]["home-code"]
                         except:
                             hometeam="null"
-                        
                         try:
                             game_lat=locations[(locations['Year']==i) & (locations['Team']==hometeam)]["Lat"].values.tolist()[0]
                             game_long=locations[(locations['Year']==i) & (locations['Team']==hometeam)]["Long"].values.tolist()[0]
                         except:
                             long="null"
                             lat="null"
-
                         try:
                             visteam=data["games"][j]["visitor-code"]
                         except:
                             visteam="null"
-
                         try:
                             vis_lat=locations[(locations['Year']==i) & (locations['Team']==visteam)]["Lat"].values.tolist()[0]
                             vis_long=locations[(locations['Year']==i) & (locations['Team']==visteam)]["Long"].values.tolist()[0]
                             stadium=data["games"][j]["venue"]
+                            print("here7")
                             if stadium in intl_locations:
                                 lat,long = intl(stadium)
                                 intl_lat=lat
@@ -94,15 +100,12 @@ for i in range(2007,2009):
                         except:
                             long="null"
                             lat="null"
-
-                        temp.loc[len(temp)] = [seasonyear,gamedate,hometeam,game_lat,game_long,visteam,vis_lat,vis_long,intl_flag,intl_lat,intl_long]
+                        temp.loc[len(temp)] = [seasonyear,gamedate,hometeam,game_lat,game_long,visteam,vis_lat,vis_long,intl_flag,intl_lat,intl_long,winteam,loseteam]
                         if intl_flag==1:
-                            temp2=pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long"])
+                            temp2=pd.DataFrame(columns=["season","date","home-team","home-lat", "home-long", "vis-team", "vis-lat", "vis-long","intl-flag","intl-lat","intl-long","win-team","lose-team"])
                             temp2.loc[0] = temp.loc[len(temp)-1].values.tolist()
-                            print(temp2.describe)
                             temp=temp.append(temp2)
                             temp.loc[len(temp)-2,"intl-flag"]="X"
-                            print(temp)
                             intl_flag=0
             except:
                 next
@@ -113,6 +116,7 @@ for i in range(2007,2009):
                 # else:
                 #     next
             season=season.append(temp,ignore_index=True)
+            print(season)
             day1=day2+timedelta(days=1)
             day2=day1+timedelta(days=30)
 
@@ -121,7 +125,6 @@ season.reset_index
 for i in range(0,len(season)):
     if season.loc[i,"intl-flag"]==1:
         season.loc[i, "travel team"] = season.iloc[i,5]
-        print("intl")
         season.loc[i, "distance (miles)"]=dist(season.iloc[i,10],season.iloc[i,7],season.iloc[i,9],season.iloc[i,6])
     
     elif season.loc[i,"intl-flag"]=="X":
@@ -132,4 +135,25 @@ for i in range(0,len(season)):
         season.loc[i, "travel team"] = season.iloc[i,5]
         season.loc[i, "distance (miles)"]=dist(season.iloc[i,4],season.iloc[i,7],season.iloc[i,3],season.iloc[i,6])
 
-season.to_csv("distance.csv")
+season.sort_values(by="date",inplace=True)
+records=pd.read_csv("team_perf_ot.csv")
+merged_table=pd.merge(season,records,left_on=["season","travel team"],right_on=["year","team"])
+merged_table.to_csv("distance2.csv")
+distance_table=pd.DataFrame(columns=["season","team","total-distance"])
+
+row=0
+for year in range(1996,2024):
+    for team in teams:
+        traveled=sum(merged_table[(merged_table["season"]==year) & (merged_table["travel team"]==team)]["distance (miles)"].unique())
+        distance_table.loc[row,"season"]=year
+        distance_table.loc[row,"team"]=team
+        distance_table.loc[row,"total-distance"]=traveled
+        row+=1
+
+distance_table.to_csv("distance_table2.csv")
+playoffs=pd.read_csv("team_perf.csv")
+final_table=pd.merge(distance_table,playoffs,left_on=["season","team"],right_on=["year","team"])
+final_table.to_csv("final_dist_table2.csv")
+
+
+
