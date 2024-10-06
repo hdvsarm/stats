@@ -2,6 +2,6 @@ This is my repo for personal stat projects that are mostly driven by unquenchabl
 
 You'll find analytics for sports, video games, history, and everything in between.
 
-Blog coming soon.
+Blog at harrix.blog
 
 Feel free to fork, just please give credit.
